@@ -15,7 +15,7 @@ Installation step:
     sudo apt install sshpass -y
     sudo apt install dos2unix -y
 
-    git https://github.com/Darkveda05/MVNBC_Dashboard.git
+    git clone https://github.com/Darkveda05/MVNBC_Dashboard.git
     cd MVNBC_Dashboard
     chmod +x MVNBC.sh
     ./MVNBC.sh
