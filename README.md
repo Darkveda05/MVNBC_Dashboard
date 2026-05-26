@@ -1,41 +1,47 @@
-# MVNBC_Dashboard
+# MVNBC (Multivendor Network Backup Config) - Dashboard
 
-MVNBC_Dashboard is a GUI dashboard for MVNBC that manages automated cron-based configuration backups for multi-vendor network devices.
+MVNBC Dashboard is a GUI dashboard for MVNBC (Multivendor Network Backup Config) that manages automated cron-based configuration backups for multi-vendor network devices.
 
 Requirements: 
 1) Linux (Ubuntu/debian/casaos)
-2) Web server (nginx/apache/xampp)
+2) git
+3) zsh
+4) Web server (nginx/apache/xampp)
+   
+Installation step:
 
-Installtion step:
-
-    cd /DATA/AppData/nginx/config/www
-    git https://github.com/Darkveda05/MVNBC_Dashboard.git
-    cd MVNBC_Dashboard
+    sudo apt install git
+    sudo apt install zsh
     sudo apt install sshpass -y
     sudo apt install dos2unix -y
+
+    git https://github.com/Darkveda05/MVNBC_Dashboard.git
+    cd MVNBC_Dashboard
     chmod +x MVNBC.sh
     ./MVNBC.sh
 
-<img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/1.Cron.png" />
+Example schedule autobackup (cron) for 5 minutes
 
-Verify cron is running (casaos / debian)
+    /*5 * * * *
+    
+<img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/1.Installation.png" />
+
+
+
+
+Check if the cron service is running (casaos / debian / ubuntu)
 
     whoami
     sudo crontab -u <user> -l
-    sudo crontab -u <user> -e  
-    
-Verify cron is running (ubuntu)
+    sudo crontab -u <user> -e
+    crontab -e   (for ubuntu)
 
-    crontab -e
+<img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/3.Login.png" />
 
-<img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/1.Cron.png" />
+<h3>Dashboard</h3>
+http://server ip/MVNBC_Dashboard/web/login.php<p></p>
 
+Username: admin ; Password: admin
 
-Dashboard:
-
-Login to http://server ip/MVNBC_Dashboard/web/login.php
-
-Username: admin<p></p>
-Password: admin
-
-<img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/3.Dashboard.png" />
+<img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/3.Login.png" />
+<img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/4.Dashboard.png" />
