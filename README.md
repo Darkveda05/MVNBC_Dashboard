@@ -24,6 +24,8 @@ Installation step:
     sudo apt install sshpass -y
     sudo apt install dos2unix -y
 
+    Install web server (nginx/apache/xampp)
+    Go to WWW folder
     git clone https://github.com/Darkveda05/MVNBC_Dashboard.git
     cd MVNBC_Dashboard
     chmod +x MVNBC.sh
