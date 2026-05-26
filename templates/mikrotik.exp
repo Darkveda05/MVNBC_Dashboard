@@ -1,0 +1,45 @@
+#!/usr/bin/expect -f
+
+set IP   [lindex $argv 0]
+set USER [lindex $argv 1]
+set PASS [lindex $argv 2]
+set OUTFILE [lindex $argv 3]
+
+set timeout 60
+
+log_file -noappend $OUTFILE
+
+spawn ssh -o StrictHostKeyChecking=no $USER@$IP
+
+expect {
+    "*yes/no*" { send "yes\r"; exp_continue }
+    "*assword:*" { send "$PASS\r";}
+}
+
+# wait ANY prompt (IMPORTANT FIX)
+expect {
+    "#" {}
+    ">" {}
+}
+
+# disable paging (CRITICAL)
+send "/terminal pager set disabled=yes\r"
+expect {
+    "#" {}
+    ">" {}
+}
+
+# force output safe export
+send "/export show-sensitive terse\r"
+
+# wait for prompt again
+expect {
+    "#" {}
+    ">" {}
+    timeout { puts "EXPORT TIMEOUT"; exit 1 }
+}
+
+send "/quit\r"
+expect eof
+
+log_file
