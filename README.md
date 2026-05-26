@@ -33,6 +33,17 @@ Check if the cron service is running (casaos / debian / ubuntu)
     sudo crontab -u <user> -e
     crontab -e   (for ubuntu)
 
+
+Change network device username/password to auto backup config
+
+    sudo nano config/devices.conf
+
+    Format:
+    vendor,ip address,username,password,enable password
+    cisco,172.16.30.29,admin,cisco,cisco123
+    mikrotik,172.16.30.1,admin,admin123   <------- if no enable password, just let it blank
+
+
 <h3>Dashboard</h3>
 http://server ip/MVNBC_Dashboard/web/login.php<p></p>
 
