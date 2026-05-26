@@ -49,7 +49,8 @@ Check if the cron service is running (casaos / debian / ubuntu)
 
 Change network device username/password to auto backup config
 
-    sudo nano config/devices.conf
+    cd config 
+    nano devices.conf
 
     Format:
     vendor,ip address,username,password,enable password
