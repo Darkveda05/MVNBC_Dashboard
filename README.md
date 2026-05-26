@@ -26,8 +26,10 @@ Installation step:
 
     Install web server (nginx/apache/xampp)
     Go to WWW folder
+
     git clone https://github.com/Darkveda05/MVNBC_Dashboard.git
     cd MVNBC_Dashboard
+    dos2unix MVNBC.sh
     chmod +x MVNBC.sh
     ./MVNBC.sh
 
