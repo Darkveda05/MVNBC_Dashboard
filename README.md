@@ -6,7 +6,7 @@ Requirements:
 1) Linux (Ubuntu/debian/casaos)
 2) git
 3) zsh
-4) Web server (nginx/apache/xampp)
+4) web server (nginx/apache/xampp)
    
 Installation step:
 
@@ -26,17 +26,12 @@ Example schedule autobackup (cron) for 5 minutes
     
 <img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/1.Installation.png" />
 
-
-
-
 Check if the cron service is running (casaos / debian / ubuntu)
 
     whoami
     sudo crontab -u <user> -l
     sudo crontab -u <user> -e
     crontab -e   (for ubuntu)
-
-<img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/3.Login.png" />
 
 <h3>Dashboard</h3>
 http://server ip/MVNBC_Dashboard/web/login.php<p></p>
