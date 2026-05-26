@@ -164,10 +164,10 @@ schedule_backup() {
         *) echo "[ERROR] Invalid option"; return ;;
     esac
 
-    JOB="$CRON $BASE_DIR/backup-engine.sh --auto"
+    JOB="$CRON $BASE_DIR/MVNBC.sh.sh --auto"
 
     # install cron safely (no duplicates)
-    (crontab -l 2>/dev/null | grep -v "$BASE_DIR/backup-engine.sh"; echo "$JOB") | crontab -
+    (crontab -l 2>/dev/null | grep -v "$BASE_DIR/MVNBC.sh.sh"; echo "$JOB") | crontab -
 
     # get PID of cron service (for reference only)
     CRON_PID=$(pgrep cron | head -n 1)
