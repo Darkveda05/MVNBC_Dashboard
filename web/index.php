@@ -79,7 +79,7 @@ $logFiles = getLogs($logDir);
 <!DOCTYPE html>
 <html>
 <head>
-<title>NOC Backup Dashboard</title>
+<title>MVNBC Dashboard</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 
