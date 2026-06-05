@@ -39,6 +39,16 @@ body {
     text-decoration: none;
 }
 
+.btn {
+    background: #1a5beb;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+
+
 /* =========================
    SEARCH BAR
 ========================= */
@@ -238,3 +248,11 @@ input[type="checkbox"] {
         font-size: 12px;
     }
 }
+
+/* =========================
+   sidebar
+========================= */
+body{margin:0;font-family:Arial;background:#0b1220;color:#fff}
+.sidebar{width:240px;position:fixed;height:100%;background:#111827;padding:20px}
+.sidebar a{display:block;color:#ccc;padding:10px;text-decoration:none}
+.sidebar a:hover{background:#1f2937}

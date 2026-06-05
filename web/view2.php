@@ -47,7 +47,7 @@ $filename = basename($file);
 
 <div class="topbar">
     <h1>File Viewer</h1>
-    <a class="logout" href="logs.php">Back</a>
+    <a class="logout" href="index.php">Back</a>
 </div>
 
 <hr>

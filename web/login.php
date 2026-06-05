@@ -1,29 +1,57 @@
 <?php
 session_start();
 
-if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+if (!empty($_SESSION['logged_in'])) {
     header("Location: index.php");
     exit;
 }
 
 $error = "";
 
-// Demo login (replace with DB later)
-$valid_user = "admin";
-$valid_pass = "admin";
+/* PASSWORD FILE */
+$BASE_DIR = realpath(__DIR__ . "/..");
+$passwordFile = $BASE_DIR . "/config/password.txt";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'] ?? '';
+/* READ PASSWORD FROM FILE */
+if (!file_exists($passwordFile)) {
+    die("Password file not found!");
+}
+
+$valid_pass = trim(file_get_contents($passwordFile));
+
+$valid_user = "admin"; // still fixed username
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if ($username === $valid_user && $password === $valid_pass) {
-        $_SESSION['logged_in'] = true;
-        $_SESSION['username'] = $username;
+    /* simple brute force protection */
+    if (!isset($_SESSION['login_attempts'])) {
+        $_SESSION['login_attempts'] = 0;
+    }
 
-        header("Location: index.php");
-        exit;
+    if ($_SESSION['login_attempts'] >= 5) {
+        $error = "Too many failed attempts. Try again later.";
     } else {
-        $error = "Invalid username or password";
+
+        if ($username === $valid_user && $password === $valid_pass) {
+
+            session_regenerate_id(true);
+
+            $_SESSION['logged_in'] = true;
+            $_SESSION['username'] = $username;
+            $_SESSION['last_activity'] = time();
+
+            $_SESSION['login_attempts'] = 0;
+
+            header("Location: index.php");
+            exit;
+
+        } else {
+            $_SESSION['login_attempts']++;
+            $error = "Invalid username or password";
+        }
     }
 }
 ?>
@@ -36,12 +64,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <link rel="stylesheet" href="style.css">
 
 <style>
-/* ===== LOGIN BACKGROUND ===== */
 body {
     background: radial-gradient(circle at top, #1f2937, #0b1220);
 }
 
-/* ===== CENTER WRAPPER ===== */
 .login-container {
     height: 100vh;
     display: flex;
@@ -49,7 +75,6 @@ body {
     align-items: center;
 }
 
-/* ===== LOGIN CARD ===== */
 .login-box {
     width: 100%;
     max-width: 380px;
@@ -62,14 +87,12 @@ body {
     text-align: center;
 }
 
-/* TITLE */
 .login-box h2 {
     margin-bottom: 20px;
     font-size: 22px;
     color: #e5e7eb;
 }
 
-/* INPUTS */
 .login-box input {
     width: 100%;
     padding: 12px;
@@ -78,14 +101,8 @@ body {
     border: 1px solid #374151;
     background: #0f172a;
     color: #fff;
-    outline: none;
 }
 
-.login-box input:focus {
-    border-color: #3b82f6;
-}
-
-/* BUTTON */
 .login-box button {
     width: 100%;
     padding: 12px;
@@ -94,30 +111,21 @@ body {
     border-radius: 10px;
     color: white;
     font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
 }
 
-.login-box button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(37,99,235,0.3);
-}
-
-/* ERROR */
 .error {
     color: #f87171;
     margin-bottom: 10px;
     font-size: 13px;
 }
 
-/*logo */
 .logo {
-      display:block; 
-      margin:0 auto 15px;
-      width:90px;
-      height:90px; 
-      border-radius:50%;
-      object-fit: contain; 
+    display:block;
+    margin:0 auto 15px;
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    object-fit: contain;
 }
 </style>
 </head>
@@ -126,11 +134,13 @@ body {
 
 <div class="login-container">
     <div class="login-box">
-         <img src="img/mvnbc.png" alt="MVNBC" class="logo">
+
+        <img src="img/mvnbc.png" class="logo" alt="MVNBC">
+
         <h2>Multivendor Network Backup Config</h2>
 
         <?php if ($error): ?>
-            <div class="error"><?= $error ?></div>
+            <div class="error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
         <form method="POST">

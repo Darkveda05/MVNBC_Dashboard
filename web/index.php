@@ -86,13 +86,17 @@ $logFiles = getLogs($logDir);
 <body>
 
 <div class="container">
-
 <!-- TOP BAR -->
-<div class="topbar">
+<div class="ul">
     <h1>🚀 MVNBC Dashboard</h1>
-    <a class="logout" href="logout.php">Logout</a>
+	<a class="logout" href="index.php">Dashboard</a>
+	<a class="logout" href="app/modules/compare.php">Compare</a>
+        <a class="logout" href="logs.php">Logs</a>
+	<a class="logout" href="app/modules/bash.php">Bash</a>
+        <a class="logout" href="app/modules/config.php">Devices</a>
+        <a class="logout" href="app/modules/settings.php">Change Password</a>
+        <a class="logout" href="logout.php">Logout</a>
 </div>
-
 <?php if (isset($_GET['deleted']) || isset($_GET['failed'])): ?>
 <div style="margin:10px 0; padding:10px; background:#111827; border-radius:8px; color:#e5e7eb;">
     ✅ Deleted: <?= (int)($_GET['deleted'] ?? 0) ?> |
@@ -153,7 +157,7 @@ $logFiles = getLogs($logDir);
     <td><?= $f['size'] ?> KB</td>
     <td><?= $f['date'] ?></td>
     <td>
-        <a href="view.php?file=<?= urlencode($f['path']) ?>">View</a>
+        <a href="view2.php?file=<?= urlencode($f['path']) ?>">View</a>
         <a href="download.php?file=<?= urlencode($f['path']) ?>">Download</a>
     </td>
 </tr>
@@ -177,49 +181,6 @@ Delete Selected
 <hr>
 
 <?php endforeach; ?>
-
-<!-- ================= LOG FILES ================= -->
-<h2>Logs</h2>
-
-<form method="POST" action="bulk_delete.php" id="logForm">
-
-<input type="hidden" name="type" value="log">
-
-<table>
-<tr>
-    <th><input type="checkbox" onclick="toggleAllLogs(this)"></th>
-    <th>Name</th>
-    <th>Size</th>
-    <th>Date</th>
-    <th>Action</th>
-</tr>
-
-<?php foreach ($logFiles as $l): ?>
-
-<tr>
-    <td>
-        <input type="checkbox" name="files[]" value="<?= htmlspecialchars($l) ?>">
-    </td>
-    <td><?= basename($l) ?></td>
-    <td><?= round(filesize($l)/1024,2) ?> KB</td>
-    <td><?= date("Y-m-d H:i:s", filemtime($l)) ?></td>
-    <td>
-        <a href="view.php?file=<?= urlencode($l) ?>">View</a>
-        <a href="download.php?file=<?= urlencode($l) ?>">Download</a>
-    </td>
-</tr>
-
-<?php endforeach; ?>
-
-</table>
-
-<br>
-
-<button type="submit" onclick="return confirm('Delete selected logs?')">
-Delete Selected Logs
-</button>
-
-</form>
 
 </div>
 
