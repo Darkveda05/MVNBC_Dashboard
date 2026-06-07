@@ -56,11 +56,11 @@ run_backup() {
         TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
         # Backup file
-        BACKUP_FILE="${ip}_${TIMESTAMP}.log"
+        BACKUP_FILE="${ip}_${TIMESTAMP}.cfg"
         BACKUP_PATH="$TARGET_DIR/$BACKUP_FILE"
 
         # Log file per device
-        LOG_FILE="$TARGET_DIR/${ip}_${TIMESTAMP}.log"
+        LOG_FILE="$LOG_DIR/${vendor}_${ip}_${TIMESTAMP}.log"
 
         case "$vendor" in
 
@@ -87,10 +87,27 @@ run_backup() {
                 ;;
 
             mikrotik)
-                expect "$TEMPLATE_DIR/mikrotik.exp" \
-                    "$ip" "$username" "$password" \
-                    "$BACKUP_PATH" >> "$LOG_FILE" 2>&1
-                ;;
+				expect "$TEMPLATE_DIR/mikrotik.exp" \
+					"$ip" "$username" "$password" \
+					"$BACKUP_PATH" >> "$LOG_FILE" 2>&1
+
+				# Cleanup MikroTik terminal noise
+					if [[ -f "$BACKUP_PATH" ]]; then
+
+				# Remove SSH spawn line
+					sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+
+				# Remove password prompt
+					sed -i "/'s password:/d" "$BACKUP_PATH"
+
+				# Remove export command echoes
+					sed -i '/\/export show-sensitive terse/d' "$BACKUP_PATH"
+
+				# Remove prompt-only lines
+					sed -i '/^\[.*@MikroTik\].*>$/d' "$BACKUP_PATH"
+
+					fi
+				;;
             aruba)
                 expect "$TEMPLATE_DIR/arubacx.exp" \
                     "$ip" "$username" "$password" \
@@ -103,11 +120,23 @@ run_backup() {
         esac
 
         # Verify
-        if [[ -s "$BACKUP_PATH" ]]; then
-            echo "[OK] Backup saved: $BACKUP_PATH"
-        else
-            echo "[FAIL] Backup empty/missing: $ip"
-        fi
+        if [[ "$vendor" == "mikrotik" ]]; then
+
+		if grep -q "^#.*RouterOS" "$BACKUP_PATH" 2>/dev/null; then
+			echo "[OK] Backup saved: $BACKUP_PATH"
+		else
+			echo "[FAIL] MikroTik export failed: $ip"
+		fi
+
+		else
+
+			if [[ -s "$BACKUP_PATH" ]]; then
+				echo "[OK] Backup saved: $BACKUP_PATH"
+			else
+				echo "[FAIL] Backup empty/missing: $ip"
+			fi
+
+		fi
 
     done < "$CONFIG_FILE"
 
