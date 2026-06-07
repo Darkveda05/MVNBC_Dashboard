@@ -1,4 +1,27 @@
 #!/bin/bash
+# Copyright (c) 2026, Darkveda All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 umask 002
 
 # ==================================================
@@ -56,11 +79,11 @@ run_backup() {
         TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
         # Backup file
-        BACKUP_FILE="${ip}_${TIMESTAMP}.cfg"
+        BACKUP_FILE="${ip}_${TIMESTAMP}.log"
         BACKUP_PATH="$TARGET_DIR/$BACKUP_FILE"
 
         # Log file per device
-        LOG_FILE="$LOG_DIR/${vendor}_${ip}_${TIMESTAMP}.log"
+        LOG_FILE="$TARGET_DIR/${ip}_${TIMESTAMP}.log"
 
         case "$vendor" in
 
@@ -120,23 +143,11 @@ run_backup() {
         esac
 
         # Verify
-        if [[ "$vendor" == "mikrotik" ]]; then
-
-		if grep -q "^#.*RouterOS" "$BACKUP_PATH" 2>/dev/null; then
-			echo "[OK] Backup saved: $BACKUP_PATH"
-		else
-			echo "[FAIL] MikroTik export failed: $ip"
-		fi
-
-		else
-
-			if [[ -s "$BACKUP_PATH" ]]; then
-				echo "[OK] Backup saved: $BACKUP_PATH"
-			else
-				echo "[FAIL] Backup empty/missing: $ip"
-			fi
-
-		fi
+        if [[ -s "$BACKUP_PATH" ]]; then
+            echo "[OK] Backup saved: $BACKUP_PATH"
+        else
+            echo "[FAIL] Backup empty/missing: $ip"
+        fi
 
     done < "$CONFIG_FILE"
 

@@ -7,6 +7,7 @@ set OUTFILE [lindex $argv 3]
 
 set timeout 180
 
+# Write session output to backup file
 log_file -noappend $OUTFILE
 
 spawn ssh -o StrictHostKeyChecking=no $USER@$IP
@@ -35,7 +36,7 @@ expect {
 
 # Wait for RouterOS prompt
 expect {
-    -re {\].*[>#] ?$} {}
+    -re {\[.*@.*\][[:space:]]*[>#]} {}
 
     "*Login failed*" {
         puts "LOGIN FAILED"
@@ -57,7 +58,7 @@ expect {
 send "\r"
 
 expect {
-    -re {\].*[>#] ?$} {}
+    -re {\[.*@.*\][[:space:]]*[>#]} {}
 
     timeout {
         puts "PROMPT SYNC TIMEOUT"
@@ -65,11 +66,12 @@ expect {
     }
 }
 
+
 # Export configuration
 send "/export show-sensitive terse\r"
 
 expect {
-    -re {\].*[>#] ?$} {}
+    -re {\[.*@.*\][[:space:]]*[>#]} {}
 
     timeout {
         puts "EXPORT TIMEOUT"
@@ -77,7 +79,12 @@ expect {
     }
 }
 
-send "/quit\r"
-expect eof
-
+# Stop logging BEFORE quitting
 log_file
+
+# Small delay to flush output
+after 500
+
+send "/quit\r"
+
+expect eof
