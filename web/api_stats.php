@@ -65,6 +65,19 @@ function validateBackup($vendor, $file)
 			'/^sysname |System View|display cu|display current-configuration/m',
 				$content
 			);
+			
+		case 'h3c_1920':
+			if (preg_match(
+				'/SSH CONNECTION FAILED|LOGIN FAILED|TIMEOUT|Connection refused/i',
+				$content
+			)) {
+			return false;
+			}
+
+			return preg_match(
+			'/^sysname |System View|display cu|display current-configuration/m',
+				$content
+			);	
 
         case 'arista':
 		    if (preg_match(
@@ -183,13 +196,6 @@ if (is_dir($vendorDir)) {
             ? "OK"
             : "FAIL";
 			
-		if ($vendor === 'h3c') {
-			error_log(
-			"[H3C DEBUG] File=" .
-			basename($latestFile) .
-			" Status=" . $status
-    );
-}
     }
 }
 
@@ -261,12 +267,25 @@ if (is_dir($vendorDir)) {
 				break;
 				}
 
-    $valid = preg_match(
-        '/^sysname |System View|display cu|display current-configuration/i',
-        $content
-    );
-
-    break;
+				$valid = preg_match(
+					'/^sysname |System View|display cu|display current-configuration/i',
+				$content
+				);
+			break;
+			
+			case 'h3c_1920':
+				if (preg_match(
+					'/SSH CONNECTION FAILED|LOGIN FAILED|TIMEOUT|Connection refused/i',
+					$content
+				)) {
+				$valid = false;
+			} else {
+			$valid = preg_match(
+            '/sysname|System View|display cu|display current-configuration/i',
+            $content
+				);
+				}
+			break;
 
             case 'arista':
 				if (preg_match(

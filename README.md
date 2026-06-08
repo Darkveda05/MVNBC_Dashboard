@@ -9,6 +9,7 @@ Current working products:
 4) Arista
 5) Aruba CX
 6) Mikrotik
+7) H3C_1920 (updated 8/6)
 
 
 Requirements: 

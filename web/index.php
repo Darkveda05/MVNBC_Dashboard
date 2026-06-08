@@ -61,6 +61,9 @@ function validateBackupFile($vendor, $file)
 
         case 'h3c':
             return preg_match('/sysname/i', $content);
+			
+        case 'h3c_1920':
+            return preg_match('/sysname/i', $content);	
 
         case 'arista':
             return preg_match('/hostname/i', $content);

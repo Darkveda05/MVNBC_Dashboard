@@ -90,6 +90,12 @@ validate_backup() {
             "^sysname |System View|display cu|display current-configuration" \
             "$file"
             ;;
+			
+	     h3c_1920)
+            grep -Eq \
+            "^sysname |System View|display cu|display current-configuration" \
+            "$file"
+            ;;
 
         arista)
             grep -Eq \
@@ -173,6 +179,18 @@ run_backup() {
 				;;
             h3c)
                 expect "$TEMPLATE_DIR/h3c.exp" \
+					"$ip" "$username" "$password" \
+					"$BACKUP_PATH" >> "$LOG_FILE" 2>&1
+				if [[ -f "$BACKUP_PATH" ]]; then
+				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+				sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
+				sed -i '/password:/Id' "$BACKUP_PATH"
+				sed -i '/./,$!d' "$BACKUP_PATH"
+				fi
+				;;
+				
+		    h3c_1920)
+                expect "$TEMPLATE_DIR/h3c_1920.exp" \
 					"$ip" "$username" "$password" \
 					"$BACKUP_PATH" >> "$LOG_FILE" 2>&1
 				if [[ -f "$BACKUP_PATH" ]]; then
