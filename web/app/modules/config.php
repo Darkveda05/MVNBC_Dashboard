@@ -45,7 +45,13 @@ $file = file_get_contents("../../../config/devices.conf");
 
     <pre style="background:#212529;color:#fff;padding:10px;border-radius:5px;">
     Path " MVNBC_Dashboard/config "<br></br>
+    cd config 
     nano devices.conf
+
+    Format:
+    vendor,ip address,username,password,enable password
+    cisco,172.16.30.29,admin,cisco,cisco123
+    mikrotik,172.16.30.1,admin,admin123   <------- if no enable password, just let it blank
     </pre>
 
     <p style="color:#dc3545;margin-bottom:0;">
