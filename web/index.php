@@ -287,7 +287,7 @@ html += `
         </div>
 
         <div class="neo-card blue">
-            <div class="neo-icon">✔</div>
+            <div class="neo-icon">✅</div>
             <div class="neo-content">
                 <div class="neo-title">Success Devices</div>
                 <div class="neo-value">${d.ok}</div>
@@ -295,7 +295,7 @@ html += `
         </div>
 
         <div class="neo-card red">
-            <div class="neo-icon">✖</div>
+            <div class="neo-icon">❌</div>
             <div class="neo-content">
                 <div class="neo-title">Failed Devices</div>
                 <div class="neo-value">${d.fail}</div>
