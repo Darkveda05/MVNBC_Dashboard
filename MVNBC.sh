@@ -55,6 +55,60 @@ echo "[INFO] BASE DIR: $BASE_DIR"
 echo "[INFO] STARTED"
 echo ""
 
+
+# ==================================================
+# BACKUP VALIDATION
+# ==================================================
+validate_backup() {
+
+    local vendor="$1"
+    local file="$2"
+
+    [[ ! -s "$file" ]] && return 1
+
+    case "$vendor" in
+
+        cisco)
+            grep -Eq \
+            "Current configuration|Building configuration|^hostname " \
+            "$file"
+            ;;
+
+        ciscoasa)
+            grep -Eq \
+            "^ASA Version|^hostname " \
+            "$file"
+            ;;
+
+        mikrotik)
+            grep -qi "RouterOS" "$file" &&
+			grep -Eq "/interface|/ip |/system " "$file"
+            ;;
+
+        h3c)
+            grep -Eq \
+            "^sysname |System View|display cu|display current-configuration" \
+            "$file"
+            ;;
+
+        arista)
+            grep -Eq \
+            "^hostname |^! device:" \
+            "$file"
+            ;;
+
+        aruba)
+            grep -Eq \
+            "^hostname |Current configuration" \
+            "$file"
+            ;;
+
+        *)
+            [[ -s "$file" ]]
+            ;;
+    esac
+}
+
 # ==================================================
 # BACKUP FUNCTION
 # ==================================================
@@ -90,52 +144,79 @@ run_backup() {
             cisco)
                 expect "$TEMPLATE_DIR/cisco.exp" \
                     "$ip" "$username" "$password" "$enable_secret" \
-                    "$BACKUP_PATH" >> "$LOG_FILE" 2>&1
-                ;;
+                    "$BACKUP_PATH" >> "$LOG_FILE" 2>&1             
+				if [[ -f "$BACKUP_PATH" ]]; then
+				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+				sed -i '/Password:/d' "$BACKUP_PATH"
+				sed -i '/^[A-Za-z0-9._-]\+>enable$/d' "$BACKUP_PATH"
+				sed -i '/^[A-Za-z0-9._-]\+#terminal length 0$/d' "$BACKUP_PATH"
+				sed -i '/^[A-Za-z0-9._-]\+#show running-config$/d' "$BACKUP_PATH"
+				sed -i '/^[A-Za-z0-9._-]\+#$/d' "$BACKUP_PATH"
+
+				fi
+				;;
             ciscoasa)
                 expect "$TEMPLATE_DIR/ciscoasa.exp" \
                     "$ip" "$username" "$password" "$enable_secret" \
                     "$BACKUP_PATH" >> "$LOG_FILE" 2>&1
-                ;;
+				if [[ -f "$BACKUP_PATH" ]]; then
+				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+				sed -i "/Permanently added .*known hosts/d" "$BACKUP_PATH"
+				sed -i '/password:/Id' "$BACKUP_PATH"
+				sed -i '/^ciscoasa> enable$/d' "$BACKUP_PATH"
+				sed -i '/^ciscoasa# ter pager 0$/d' "$BACKUP_PATH"
+				sed -i '/^ciscoasa# show running-config$/d' "$BACKUP_PATH"
+				sed -i '/^ciscoasa>$/d' "$BACKUP_PATH"
+				sed -i '/^ciscoasa#$/d' "$BACKUP_PATH"
+				sed -i '/./,$!d' "$BACKUP_PATH"
+				fi
+				;;
             h3c)
                 expect "$TEMPLATE_DIR/h3c.exp" \
-                    "$ip" "$username" "$password" \
-                    "$BACKUP_PATH" >> "$LOG_FILE" 2>&1
-                ;;
+					"$ip" "$username" "$password" \
+					"$BACKUP_PATH" >> "$LOG_FILE" 2>&1
+				if [[ -f "$BACKUP_PATH" ]]; then
+				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+				sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
+				sed -i '/password:/Id' "$BACKUP_PATH"
+				sed -i '/./,$!d' "$BACKUP_PATH"
+				fi
+				;;
 
             arista)
                 expect "$TEMPLATE_DIR/arista.exp" \
                     "$ip" "$username" "$password" "$enable_secret" \
                     "$BACKUP_PATH" >> "$LOG_FILE" 2>&1
+                if [[ -f "$BACKUP_PATH" ]]; then
+				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+				sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
+				sed -i '/Password:/Id' "$BACKUP_PATH"
+				sed -i '/Last login:/Id' "$BACKUP_PATH"
+				fi
                 ;;
 
             mikrotik)
 				expect "$TEMPLATE_DIR/mikrotik.exp" \
 					"$ip" "$username" "$password" \
 					"$BACKUP_PATH" >> "$LOG_FILE" 2>&1
-
-				# Cleanup MikroTik terminal noise
 					if [[ -f "$BACKUP_PATH" ]]; then
-
-				# Remove SSH spawn line
 					sed -i '/^spawn ssh /d' "$BACKUP_PATH"
-
-				# Remove password prompt
-					sed -i "/'s password:/d" "$BACKUP_PATH"
-
-				# Remove export command echoes
+					sed -i "/password:/Id" "$BACKUP_PATH"
 					sed -i '/\/export show-sensitive terse/d' "$BACKUP_PATH"
-
-				# Remove prompt-only lines
 					sed -i '/^\[.*@MikroTik\].*>$/d' "$BACKUP_PATH"
-
 					fi
 				;;
             aruba)
                 expect "$TEMPLATE_DIR/arubacx.exp" \
                     "$ip" "$username" "$password" \
                     "$BACKUP_PATH" >> "$LOG_FILE" 2>&1
-                ;;
+					if [[ -f "$BACKUP_PATH" ]]; then
+					sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+					sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
+					sed -i '/password:/Id' "$BACKUP_PATH"
+					sed -i '/./,$!d' "$BACKUP_PATH"
+					fi
+					;;
             *)
                 echo "[WARN] Unknown vendor: $vendor"
                 continue
@@ -143,11 +224,15 @@ run_backup() {
         esac
 
         # Verify
-        if [[ -s "$BACKUP_PATH" ]]; then
-            echo "[OK] Backup saved: $BACKUP_PATH"
-        else
-            echo "[FAIL] Backup empty/missing: $ip"
-        fi
+        if validate_backup "$vendor" "$BACKUP_PATH"; then
+
+			echo "[OK] Backup saved: $BACKUP_PATH"
+
+		else
+
+			echo "[FAIL] Backup validation failed: $ip"
+
+		fi
 
     done < "$CONFIG_FILE"
 

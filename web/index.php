@@ -25,6 +25,55 @@ $backupDir = realpath(__DIR__ . "/../backups");
 $logDir    = realpath(__DIR__ . "/../logs");
 $search = strtolower(trim($_GET['search'] ?? ''));
 
+
+function validateBackupFile($vendor, $file)
+{
+    if (!file_exists($file) || filesize($file) == 0) {
+        return false;
+    }
+
+    $content = @file_get_contents($file);
+	
+
+    switch (strtolower($vendor)) {
+
+        case 'cisco':
+            return preg_match(
+                '/Current configuration|Building configuration|hostname/i',
+                $content
+            );
+
+        case 'ciscoasa':
+            return preg_match(
+                '/ASA Version|hostname/i',
+                $content
+            );
+
+        case 'mikrotik':
+            return (
+                stripos($content, 'RouterOS') !== false &&
+                (
+                    stripos($content, '/interface') !== false ||
+                    stripos($content, '/ip ') !== false ||
+                    stripos($content, '/system ') !== false
+                )
+            );
+
+        case 'h3c':
+            return preg_match('/sysname/i', $content);
+
+        case 'arista':
+            return preg_match('/hostname/i', $content);
+
+        case 'aruba':
+            return preg_match('/hostname|Current configuration/i', $content);
+
+        default:
+            return filesize($file) > 0;
+    }
+}
+
+
 /* BACKUP SCANNER */
 function getBackupFilesGrouped($baseDir, $search = '')
 {
@@ -52,13 +101,16 @@ function getBackupFilesGrouped($baseDir, $search = '')
 
             if ($search && strpos($hay, $search) === false) continue;
 
-            $grouped[$vendor][] = [
-                "path" => $file,
-                "name" => $filename,
-                "ip"   => $ip,
-                "size" => round(filesize($file)/1024,2),
-                "date" => $date
-            ];
+            $status = validateBackupFile($vendor, $file);
+
+			$grouped[$vendor][] = [
+			"path" => $file,
+			"name" => $filename,
+			"ip"   => $ip,
+			"size" => round(filesize($file)/1024,2),
+			"date" => $date,
+			"status" => $status
+			];
         }
     }
 
@@ -80,7 +132,7 @@ $logFiles = getLogs($logDir);
 <html>
 <head>
 <title>MVNBC Dashboard</title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=2">
 </head>
 
 <body>
@@ -124,7 +176,13 @@ $logFiles = getLogs($logDir);
 <hr>
 
 <!-- ================= BACKUP FILES ================= -->
-<h2>Backup Files</h2>
+
+<h2 onclick="toggleBackupFiles()" style="cursor:pointer;">
+    <span id="backupArrow">▼</span>
+    Backup Files
+</h2>
+
+<div id="backupSection">
 
 <?php foreach ($backupGroups as $vendor => $files): ?>
 
@@ -134,8 +192,16 @@ $logFiles = getLogs($logDir);
 
 <div class="vendor-section">
 
-<h3><?= strtoupper($vendor) ?></h3>
+<h3 class="vendor-title"
+    onclick="toggleVendorSection('<?= $vendor ?>')">
 
+    <span id="arrow-<?= $vendor ?>">▼</span>
+
+    <?= strtoupper($vendor) ?>
+</h3>
+
+<div id="vendor-<?= $vendor ?>">
+<div id="backupSection">
 <table>
 <tr>
     <th><input type="checkbox" onclick="toggleVendorAll(this, '<?= $vendor ?>')"></th>
@@ -143,6 +209,7 @@ $logFiles = getLogs($logDir);
     <th>IP</th>
     <th>Size</th>
     <th>Date</th>
+	<th>Status</th>
     <th>Action</th>
 </tr>
 
@@ -156,6 +223,13 @@ $logFiles = getLogs($logDir);
     <td><?= htmlspecialchars($f['ip']) ?></td>
     <td><?= $f['size'] ?> KB</td>
     <td><?= $f['date'] ?></td>
+	<td>
+	<?php if ($f['status']): ?>
+		<span style="color:#22c55e;font-weight:bold;">OK</span>
+	<?php else: ?>
+		<span style="color:#ef4444;font-weight:bold;">FAILED</span>
+	<?php endif; ?>
+</td>
     <td>
         <a href="view2.php?file=<?= urlencode($f['path']) ?>">View</a>
         <a href="download.php?file=<?= urlencode($f['path']) ?>">Download</a>
@@ -165,7 +239,7 @@ $logFiles = getLogs($logDir);
 <?php endforeach; ?>
 
 </table>
-
+</div>
 <br>
 
 <button type="button" onclick="selectVendorAll('<?= $vendor ?>')">Select All</button>
@@ -189,21 +263,87 @@ Delete Selected
 
 async function loadStats(){
 
-    const r = await fetch("api_stats.php");
+    const r = await fetch("api_stats.php?v=" + Date.now());
     const d = await r.json();
 
     let html = "";
 
-    html += `
-    <div class="card-row">
-        <div class="card green">Total<br><b>${d.total}</b></div>
-        <div class="card blue">Success<br><b>${d.ok}</b></div>
-        <div class="card red">Fail<br><b>${d.fail}</b></div>
+html += `
+
+<div class="dashboard-highlight">
+
+    <div class="dashboard-title">
+        Current Device Status
     </div>
 
-    <h3>Vendor Dashboard</h3>
-    <div id="vendorWrap"></div>
-    `;
+    <div class="neo-row">
+
+        <div class="neo-card green">
+            <div class="neo-icon">🖥️</div>
+            <div class="neo-content">
+                <div class="neo-title">Total Devices</div>
+                <div class="neo-value">${d.total}</div>
+            </div>
+        </div>
+
+        <div class="neo-card blue">
+            <div class="neo-icon">✔</div>
+            <div class="neo-content">
+                <div class="neo-title">Success Devices</div>
+                <div class="neo-value">${d.ok}</div>
+            </div>
+        </div>
+
+        <div class="neo-card red">
+            <div class="neo-icon">✖</div>
+            <div class="neo-content">
+                <div class="neo-title">Failed Devices</div>
+                <div class="neo-value">${d.fail}</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="dashboard-highlight">
+
+    <div class="dashboard-title">
+        Backup History
+    </div>
+
+    <div class="neo-row">
+
+        <div class="neo-card green">
+            <div class="neo-icon">📄</div>
+            <div class="neo-content">
+                <div class="neo-title">Total Files</div>
+                <div class="neo-value">${d.file_total}</div>
+            </div>
+        </div>
+
+        <div class="neo-card blue">
+            <div class="neo-icon">✅</div>
+            <div class="neo-content">
+                <div class="neo-title">Successful Files</div>
+                <div class="neo-value">${d.file_ok}</div>
+            </div>
+        </div>
+
+        <div class="neo-card red">
+            <div class="neo-icon">❌</div>
+            <div class="neo-content">
+                <div class="neo-title">Failed Files</div>
+                <div class="neo-value">${d.file_fail}</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+`;
 
     document.getElementById("stats").innerHTML = html;
 
@@ -233,16 +373,33 @@ function renderVendors(filter){
         if (filter !== "all" && filter !== state) return;
 
         html += `
-        <div class="vendor-card" style="border-left:5px solid ${color}">
-            <b>${v.vendor.toUpperCase()}</b> <span style="color:${color}">${rate.toFixed(1)}%</span>
-            <div>
-                Total: ${v.count}<br>
-                OK: ${v.ok}<br>
-                FAIL: ${v.fail}<br>
-                Last: ${v.last}
-            </div>
-        </div>
-        `;
+        <div class="vendor-card"
+			style="border-left:5px solid ${color}">
+
+			<div class="vendor-card-header"
+				 onclick="toggleVendorCard('${v.vendor}')">
+
+			<span id="arrow-${v.vendor}">
+				▼
+			</span>
+
+			<b>${v.vendor.toUpperCase()}</b>
+
+			<span style="color:${color}">
+				${rate.toFixed(1)}%
+			</span>
+			</div>
+
+		<div id="body-${v.vendor}" class="vendor-card-body">
+
+			Total: ${v.count}<br>
+			OK: ${v.ok}<br>
+			FAIL: ${v.fail}<br>
+			Last: ${v.last}
+		</div>
+
+		</div>
+		`;
     });
 
     document.getElementById("vendorWrap").innerHTML = html;
@@ -270,10 +427,103 @@ function toggleAllLogs(master) {
         .forEach(cb => cb.checked = master.checked);
 }
 
+let vendorOpen = true;
+
+function toggleVendorDashboard()
+{
+    const section = document.getElementById("vendorSection");
+    const arrow = document.getElementById("vendorArrow");
+
+    vendorOpen = !vendorOpen;
+
+    if (vendorOpen)
+    {
+        section.style.maxHeight = "2000px";
+        section.style.opacity = "1";
+        arrow.innerHTML = "▼";
+    }
+    else
+    {
+        section.style.maxHeight = "0px";
+        section.style.opacity = "0";
+        arrow.innerHTML = "▶";
+    }
+}
+
+function toggleVendorCard(vendor)
+{
+    const body =
+        document.getElementById("body-" + vendor);
+
+    const arrow =
+        document.getElementById("arrow-" + vendor);
+
+    if (body.style.display === "none")
+    {
+        body.style.display = "block";
+        arrow.innerHTML = "▼";
+    }
+    else
+    {
+        body.style.display = "none";
+        arrow.innerHTML = "▶";
+    }
+}
+
 loadStats();
 setInterval(loadStats, 10000);
 
 </script>
+
+<script>
+
+let backupOpen = true;
+
+function toggleBackupFiles()
+{
+    const section =
+        document.getElementById("backupSection");
+
+    const arrow =
+        document.getElementById("backupArrow");
+
+    backupOpen = !backupOpen;
+
+    if (backupOpen)
+    {
+        section.style.display = "block";
+        arrow.innerHTML = "▼";
+    }
+    else
+    {
+        section.style.display = "none";
+        arrow.innerHTML = "▶";
+    }
+}
+
+function toggleVendorSection(vendor)
+{
+    const section =
+        document.getElementById("vendor-" + vendor);
+
+    const arrow =
+        document.getElementById("arrow-" + vendor);
+
+    if (section.style.display === "none")
+    {
+        section.style.display = "block";
+        arrow.innerHTML = "▼";
+    }
+    else
+    {
+        section.style.display = "none";
+        arrow.innerHTML = "▶";
+    }
+}
+
+</script>
+
+</body>
 
 </body>
 </html>

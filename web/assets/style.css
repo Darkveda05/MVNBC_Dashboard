@@ -256,3 +256,243 @@ body{margin:0;font-family:Arial;background:#0b1220;color:#fff}
 .sidebar{width:240px;position:fixed;height:100%;background:#111827;padding:20px}
 .sidebar a{display:block;color:#ccc;padding:10px;text-decoration:none}
 .sidebar a:hover{background:#1f2937}
+
+
+.vendor-dashboard-title{
+    font-size:24px;
+    font-weight:bold;
+    margin:15px 0;
+    cursor:pointer;
+    user-select:none;
+}
+
+#vendorSection{
+    overflow:hidden;
+    max-height:2000px;
+    opacity:1;
+
+    transition:
+        max-height .35s ease,
+        opacity .35s ease;
+}
+
+.vendor-card-header{
+    cursor:pointer;
+    font-weight:bold;
+    user-select:none;
+}
+
+.vendor-card-body{
+    margin-top:5px;
+}
+
+/* ======================================
+   Animated Dashboard Cards
+====================================== */
+
+.dashboard-highlight {
+
+    padding: 15px;
+    margin-bottom: 20px;
+
+    border: 2px solid #facc15;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 0 10px rgba(250,204,21,.6),
+        0 0 25px rgba(250,204,21,.4);
+
+    animation: glowBorder 2s infinite alternate;
+}
+
+@keyframes glowBorder {
+
+    from {
+        box-shadow:
+            0 0 10px rgba(250,204,21,.4),
+            0 0 25px rgba(250,204,21,.2);
+    }
+
+    to {
+        box-shadow:
+            0 0 20px rgba(250,204,21,.9),
+            0 0 40px rgba(250,204,21,.7);
+    }
+}
+
+.pulse-card {
+
+    transition: all .3s ease;
+
+    animation: pulseCard 2s infinite;
+}
+
+.pulse-card:hover {
+
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 0 15px rgba(250,204,21,.7),
+        0 0 30px rgba(250,204,21,.4);
+}
+
+@keyframes pulseCard {
+
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* =====================================
+   NOC DASHBOARD
+===================================== */
+
+.dashboard-title{
+    color:#ffe600;
+    font-size:22px;
+    font-weight:700;
+    margin-bottom:18px;
+
+    text-shadow:
+        0 0 10px rgba(255,230,0,.8),
+        0 0 20px rgba(255,230,0,.4);
+}
+
+.dashboard-highlight{
+
+    padding:20px;
+    margin:25px 0;
+
+    border-radius:20px;
+
+    background:#111827;
+
+    border:3px solid #ffd700;
+
+    box-shadow:
+        0 0 20px rgba(255,215,0,.8),
+        0 0 40px rgba(255,215,0,.5);
+
+    animation: dashboardGlow 2s infinite alternate;
+}
+
+@keyframes dashboardGlow{
+
+    from{
+        box-shadow:
+            0 0 15px rgba(255,215,0,.5),
+            0 0 30px rgba(255,215,0,.3);
+    }
+
+    to{
+        box-shadow:
+            0 0 25px rgba(255,215,0,1),
+            0 0 60px rgba(255,215,0,.7);
+    }
+}
+
+.neo-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+}
+
+.neo-card{
+   display:flex;
+    align-items:center;
+    gap:15px;
+    padding:15px 20px;
+    border-radius:12px;
+    min-height:90px;
+    transition:.3s;
+}
+
+.neo-card:hover{
+
+    transform:
+        translateY(-4px)
+        scale(1.02);
+}
+
+.neo-card.green{
+
+    background:
+        linear-gradient(
+            135deg,
+            #014b31,
+            #003d26
+        );
+
+    border:1px solid #00ff88;
+
+    box-shadow:
+        inset 0 0 20px rgba(0,255,136,.15);
+}
+
+.neo-card.blue{
+
+    background:
+        linear-gradient(
+            135deg,
+            #002b73,
+            #001f55
+        );
+
+    border:1px solid #3b82f6;
+
+    box-shadow:
+        inset 0 0 20px rgba(59,130,246,.15);
+}
+
+.neo-card.red{
+
+    background:
+        linear-gradient(
+            135deg,
+            #6b0000,
+            #450000
+        );
+
+    border:1px solid #ff4d4d;
+
+    box-shadow:
+        inset 0 0 20px rgba(255,77,77,.15);
+}
+
+.neo-icon{
+ font-size:40px;
+    min-width:45px;
+    text-align:center;
+}
+
+.neo-content{
+    flex:1;
+}
+
+.neo-title{
+ font-size:14px;
+    font-weight:700;
+    margin-bottom:6px;
+}
+
+.neo-value{
+ font-size:28px;
+    font-weight:800;
+}
+
+@media(max-width:1000px){
+
+    .neo-row{
+
+        grid-template-columns:1fr;
+    }
+}
