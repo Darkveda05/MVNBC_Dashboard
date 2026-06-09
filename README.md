@@ -13,10 +13,13 @@ Current working products:
 8) Fortigate
 9) Juniper
 
-Update
-9/6 - Added template for H3C_1920, Fortigate & juniper
-    - Update New dashboard
+<br></br>
+*** Update ***<p></p>
+<ins> 9/6/2026 </ins>
+- Added template for H3C_1920, Fortigate & juniper
+- Update New dashboard
 
+<br></br>
 Requirements: 
 1) Linux (Ubuntu/debian/casaos)
 2) git
