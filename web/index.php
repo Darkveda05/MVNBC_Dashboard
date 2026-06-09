@@ -69,7 +69,24 @@ function validateBackupFile($vendor, $file)
             return preg_match('/hostname/i', $content);
 
         case 'aruba':
-            return preg_match('/hostname|Current configuration/i', $content);
+			return preg_match('/hostname|Current configuration/i',$content);
+
+		case 'fortigate':
+			if (preg_match('/No route to host|Connection refused|Connection timed out|LOGIN FAILED|ssh:/i',$content)) 
+			{
+			return false;
+			}
+			return preg_match(
+			'/#config-version=|config system|config firewall/i',
+				$content
+			);
+		
+		case 'juniper':
+			if (preg_match('/LOGIN FAILED|Connection refused|No route to host|timed out|ssh:/i',$content)) 
+			{
+			return false;
+			}
+		return preg_match('/^set system|^set interfaces|^set routing-options/m',$content);
 
         default:
             return filesize($file) > 0;

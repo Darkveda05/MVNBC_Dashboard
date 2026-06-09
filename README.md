@@ -9,8 +9,13 @@ Current working products:
 4) Arista
 5) Aruba CX
 6) Mikrotik
-7) H3C_1920 (updated 8/6)
+7) H3C_1920
+8) Fortigate
+9) Juniper
 
+Update
+9/6 - Added template for H3C_1920, Fortigate & juniper
+    - Update New dashboard
 
 Requirements: 
 1) Linux (Ubuntu/debian/casaos)

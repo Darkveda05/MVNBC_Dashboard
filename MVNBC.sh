@@ -108,7 +108,19 @@ validate_backup() {
             "^hostname |Current configuration" \
             "$file"
             ;;
-
+			
+		fortigate)
+			grep -Eq \
+			"^config system|^config firewall|^set hostname|^end$" \
+			"$file"
+			;;
+		
+		juniper)
+			grep -Eq \
+			"^set system|^set interfaces|^set routing-options|^set security" \
+			"$file"
+			;;
+	
         *)
             [[ -s "$file" ]]
             ;;
@@ -235,6 +247,41 @@ run_backup() {
 					sed -i '/./,$!d' "$BACKUP_PATH"
 					fi
 					;;
+			fortigate)
+				expect "$TEMPLATE_DIR/fortigate.exp" \
+					"$ip" "$username" "$password" \
+					"$BACKUP_PATH" >> "$LOG_FILE" 2>&1
+
+					if [[ -f "$BACKUP_PATH" ]]; then
+					sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+					sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
+					sed -i '/password:/Id' "$BACKUP_PATH"
+					sed -i '/config system console/d' "$BACKUP_PATH"
+					sed -i '/set output standard/d' "$BACKUP_PATH"
+					sed -i '/^end$/d' "$BACKUP_PATH"
+					sed -i '/show full-configuration/d' "$BACKUP_PATH"
+					sed -i '/FortiGate-.*# config system console/d' "$BACKUP_PATH"
+					sed -i '/FortiGate-.*(console) # set output standard/d' "$BACKUP_PATH"
+					sed -i '/FortiGate-.*(console) # end/d' "$BACKUP_PATH"
+					sed -i '/FortiGate-.*# show full-configuration/d' "$BACKUP_PATH"
+					fi
+					;;
+			juniper)
+				expect "$TEMPLATE_DIR/juniper.exp" \
+					"$ip" "$username" "$password" \
+					"$BACKUP_PATH" >> "$LOG_FILE" 2>&1
+
+					if [[ -f "$BACKUP_PATH" ]]; then
+					sed -i '/^spawn ssh /d' "$BACKUP_PATH"
+					sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
+					sed -i '/password:/Id' "$BACKUP_PATH"
+					sed -i '/set cli screen-length 0/d' "$BACKUP_PATH"
+					sed -i '/Screen length set to 0/d' "$BACKUP_PATH"
+					sed -i '/^--- JUNOS/d' "$BACKUP_PATH"
+					sed -i '/^Connection to .* closed\./d' "$BACKUP_PATH"
+					fi
+					;;
+
             *)
                 echo "[WARN] Unknown vendor: $vendor"
                 continue

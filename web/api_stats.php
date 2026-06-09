@@ -103,7 +103,33 @@ function validateBackup($vendor, $file)
             return preg_match(
                '/Current configuration:|^hostname |^user admin |^vlan /mi',
             $content
-    );
+			);
+			
+		case 'fortigate':
+			if (preg_match(
+				'/No route to host|Connection refused|Connection timed out|LOGIN FAILED|ssh:/i',
+				$content
+			)) {
+			return false;
+			}
+
+			return preg_match(
+				'/#config-version=|config system|config firewall/i',
+			$content
+			);
+			
+		case 'juniper':
+			if (preg_match(
+				'/LOGIN FAILED|Connection refused|No route to host|timed out|ssh:/i',
+			$content
+			)) {
+			return false;
+			}
+			return preg_match(
+				'/^set system|^set interfaces|^set routing-options/m',
+			$content
+			);
+	
 
         default:
             return filesize($file) > 0;
@@ -315,6 +341,34 @@ if (is_dir($vendorDir)) {
 				'/Current configuration:|hostname|user admin|vlan /i',
 			$content
 			);
+			break;
+			
+			case 'fortigate':
+				if (preg_match(
+				'/No route to host|Connection refused|Connection timed out|LOGIN FAILED|ssh:/i',
+				$content
+				)) {
+				$valid = false;
+				} else {
+					$valid = preg_match(
+					'/#config-version=|config system|config firewall/i',
+					$content
+					);
+				}
+			break;
+			
+			case 'juniper':
+				if (preg_match(
+				'/LOGIN FAILED|Connection refused|No route to host|timed out|ssh:/i',
+				$content
+				)) {
+				$valid = false;
+				} else {
+					$valid = preg_match(
+					'/^set system|^set interfaces|^set routing-options/m',
+					$content
+					);
+				}
 			break;
         }
 
