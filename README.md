@@ -14,21 +14,18 @@ Current working products:
 9) Juniper
 
 <br></br>
-*** Update ***<p></p>
-<ins> 17/6/2026 </ins>
-- Update New dashboard
-- Password encryption
-- Update Devices section
-<ins> 9/6/2026 </ins>
-- Added template for H3C_1920, Fortigate & juniper
+Change Log:<p></p>
+17/6/2026 - New dashboard, password encryption & device section 
+<p></p>
+9/6/2026 - Added template for H3C_1920, Fortigate & Juniper
 
 <br></br>
 Requirements: 
 1) Linux (Ubuntu/debian/casaos)
 2) git
 3) zsh
-4) web server (nginx/apache/xampp)
-   
+4) web server (nginx/apache/xampp)<br></br>
+
 Installation step:
 
     sudo apt install git
@@ -45,12 +42,14 @@ Installation step:
     chmod +x MVNBC.sh
     ./MVNBC.sh
 
+<br></br>
 Example schedule autobackup (cron) for 5 minutes
 
     /*5 * * * *
     
 <img width="500" height="843" alt="Image" src="https://github.com/Darkveda05/MVNBC_Dashboard/blob/main/output/1.Installation.png" />
 
+<br></br>
 Check if the cron service is running (casaos / debian / ubuntu)
 
     whoami
