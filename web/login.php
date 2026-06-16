@@ -83,7 +83,7 @@ if (isset($_GET['error']) && $_GET['error'] === 'session' && $error === '') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign in · MVNBC</title>
+<title>MVNBC</title>
 <link rel="stylesheet" href="assets/style.css?v=5">
 </head>
 <body>
@@ -91,8 +91,7 @@ if (isset($_GET['error']) && $_GET['error'] === 'session' && $error === '') {
 <div class="login-screen">
     <div class="login-card">
         <img src="img/mvnbc.png" class="logo" alt="MVNBC">
-        <h1>MVNBC Backup Console</h1>
-        <div class="tagline">Multivendor Network Configuration Backups</div>
+        <div class="tagline">Multivendor Network Configuration Backup</div>
 
         <?php if ($error): ?>
             <div class="login-error">
