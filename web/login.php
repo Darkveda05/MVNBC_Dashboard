@@ -21,6 +21,13 @@ $valid_pass = trim(file_get_contents($passwordFile));
 
 $valid_user = "admin"; // still fixed username
 
+/* Detect whether the stored password is a bcrypt/argon hash or legacy plaintext */
+function mvnbc_is_hash($s) {
+    return is_string($s) && (strncmp($s, '$2y$', 4) === 0
+        || strncmp($s, '$argon2', 7) === 0
+        || strncmp($s, '$2a$', 4) === 0);
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $username = trim($_POST['username'] ?? '');
@@ -35,7 +42,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "Too many failed attempts. Try again later.";
     } else {
 
-        if ($username === $valid_user && $password === $valid_pass) {
+        /* Verify against a hash when present; fall back to plaintext compare for the
+           legacy file, and transparently upgrade it to a hash on success. */
+        if (mvnbc_is_hash($valid_pass)) {
+            $passOk = password_verify($password, $valid_pass);
+        } else {
+            $passOk = hash_equals($valid_pass, $password);
+            if ($passOk) {
+                // upgrade legacy plaintext store to a bcrypt hash
+                @file_put_contents($passwordFile, password_hash($password, PASSWORD_DEFAULT), LOCK_EX);
+            }
+        }
+
+        if ($username === $valid_user && $passOk) {
 
             session_regenerate_id(true);
 
@@ -54,101 +73,47 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 }
-?>
 
+if (isset($_GET['error']) && $_GET['error'] === 'session' && $error === '') {
+    $error = "Your session expired. Please sign in again.";
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Login</title>
-<link rel="stylesheet" href="style.css">
-
-<style>
-body {
-    background: radial-gradient(circle at top, #1f2937, #0b1220);
-}
-
-.login-container {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.login-box {
-    width: 100%;
-    max-width: 380px;
-    background: rgba(17, 24, 39, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid #1f2937;
-    padding: 35px;
-    border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    text-align: center;
-}
-
-.login-box h2 {
-    margin-bottom: 20px;
-    font-size: 22px;
-    color: #e5e7eb;
-}
-
-.login-box input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 12px;
-    border-radius: 10px;
-    border: 1px solid #374151;
-    background: #0f172a;
-    color: #fff;
-}
-
-.login-box button {
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(90deg, #2563eb, #1d4ed8);
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-weight: bold;
-}
-
-.error {
-    color: #f87171;
-    margin-bottom: 10px;
-    font-size: 13px;
-}
-
-.logo {
-    display:block;
-    margin:0 auto 15px;
-    width:90px;
-    height:90px;
-    border-radius:50%;
-    object-fit: contain;
-}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · MVNBC</title>
+<link rel="stylesheet" href="assets/style.css?v=5">
 </head>
-
 <body>
 
-<div class="login-container">
-    <div class="login-box">
-
+<div class="login-screen">
+    <div class="login-card">
         <img src="img/mvnbc.png" class="logo" alt="MVNBC">
-
-        <h2>Multivendor Network Backup Config</h2>
+        <h1>MVNBC Backup Console</h1>
+        <div class="tagline">Multivendor Network Configuration Backups</div>
 
         <?php if ($error): ?>
-            <div class="error"><?= htmlspecialchars($error) ?></div>
+            <div class="login-error">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <span><?= htmlspecialchars($error) ?></span>
+            </div>
         <?php endif; ?>
 
         <form method="POST">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Sign In</button>
+            <div class="field">
+                <label class="field-label">Username</label>
+                <input type="text" name="username" placeholder="admin" required autofocus>
+            </div>
+            <div class="field">
+                <label class="field-label">Password</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit">Sign in</button>
         </form>
 
+        <div class="login-foot">Authorized network operators only</div>
     </div>
 </div>
 

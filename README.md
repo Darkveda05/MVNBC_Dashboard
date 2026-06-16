@@ -15,9 +15,12 @@ Current working products:
 
 <br></br>
 *** Update ***<p></p>
+<ins> 17/6/2026 </ins>
+- Update New dashboard
+- Password encryption
+- Update Devices section
 <ins> 9/6/2026 </ins>
 - Added template for H3C_1920, Fortigate & juniper
-- Update New dashboard
 
 <br></br>
 Requirements: 

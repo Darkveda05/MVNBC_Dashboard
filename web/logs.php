@@ -35,115 +35,97 @@ function getLogs($dir) {
 
 $logFiles = getLogs($logDir);
 
-/* TEMP FIX: backupGroups not defined */
-$backupGroups = [];
+require_once __DIR__ . '/app/includes/layout.php';
 ?>
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Logs</title>
-<link rel="stylesheet" href="assets/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logs · MVNBC</title>
+<link rel="stylesheet" href="assets/style.css?v=5">
 </head>
-
 <body>
 
-<div class="container">
-
-<!-- TOP BAR -->
-<div class="ul">
-    <h1>🚀 MVNBC Dashboard</h1>
-    <a class="logout" href="index.php">Dashboard</a>
-    <a class="logout" href="app/modules/compare.php">Compare</a>
-    <a class="logout" href="logs.php">Logs</a>
-    <a class="logout" href="app/modules/bash.php">Bash</a>
-    <a class="logout" href="app/modules/config.php">Devices</a>
-    <a class="logout" href="app/modules/settings.php">Change Password</a>
-    <a class="logout" href="logout.php">Logout</a>
-</div>
+<?php mvnbc_shell_open('logs', 'Run Logs', 'Backup job output and audit history'); ?>
 
 <?php if (isset($_GET['deleted']) || isset($_GET['failed'])): ?>
-<div style="margin:10px 0; padding:10px; background:#111827; border-radius:8px; color:#e5e7eb;">
-    ✅ Deleted: <?= (int)($_GET['deleted'] ?? 0) ?> |
-    ❌ Failed: <?= (int)($_GET['failed'] ?? 0) ?>
-</div>
+    <?php $del = (int)($_GET['deleted'] ?? 0); $fl = (int)($_GET['failed'] ?? 0); ?>
+    <div class="flash <?= $fl > 0 ? 'error' : 'success' ?>" id="flash">
+        <?= mvnbc_icon($fl > 0 ? 'alert' : 'check') ?>
+        <span><strong><?= $del ?></strong> log(s) deleted<?= $fl > 0 ? " · <strong>$fl</strong> failed" : "" ?>.</span>
+        <span class="x" onclick="document.getElementById('flash').remove()">✕</span>
+    </div>
 <?php endif; ?>
 
-<hr>
+<div class="panel">
+    <div class="panel-head">
+        <h2>Log Files</h2>
+        <span class="count-chip"><?= count($logFiles) ?> file<?= count($logFiles) === 1 ? '' : 's' ?></span>
+    </div>
 
-<!-- ================= BACKUP FILES (SAFE EMPTY BLOCK) ================= -->
-<?php foreach ($backupGroups as $vendor => $files): ?>
-<?php endforeach; ?>
+    <?php if (empty($logFiles)): ?>
+        <div class="empty">
+            <?= mvnbc_icon('logs') ?>
+            <h3>No logs yet</h3>
+            <p>Run logs will appear here after the next scheduled backup.</p>
+        </div>
+    <?php else: ?>
 
-<!-- ================= LOG FILES ================= -->
-<h2>Logs</h2>
+    <form method="POST" action="bulk_delete.php" id="logForm">
+        <input type="hidden" name="type" value="log">
 
-<form method="POST" action="bulk_delete.php" id="logForm">
+        <div class="table-wrap">
+        <table class="data">
+            <thead>
+            <tr>
+                <th style="width:34px;"><input type="checkbox" onclick="toggleAllLogs(this)"></th>
+                <th>Name</th>
+                <th>Size</th>
+                <th>Modified</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($logFiles as $l): ?>
+            <tr>
+                <td><input type="checkbox" name="files[]" value="<?= htmlspecialchars($l) ?>"></td>
+                <td class="file-name"><?= htmlspecialchars(basename($l)) ?></td>
+                <td><?= file_exists($l) ? round(filesize($l)/1024, 2) : 0 ?> KB</td>
+                <td class="mono"><?= file_exists($l) ? date("Y-m-d H:i:s", filemtime($l)) : '-' ?></td>
+                <td>
+                    <div class="row-actions">
+                        <a href="view.php?file=<?= urlencode($l) ?>"><?= mvnbc_icon('eye') ?> View</a>
+                        <a href="download.php?file=<?= urlencode($l) ?>"><?= mvnbc_icon('download') ?> Get</a>
+                    </div>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        </div>
 
-<input type="hidden" name="type" value="log">
+        <div class="btn-row">
+            <button type="button" class="btn btn-sm" onclick="selectAllLogs(true)">Select all</button>
+            <button type="button" class="btn btn-sm" onclick="selectAllLogs(false)">Clear</button>
+            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete the selected logs?')">
+                <?= mvnbc_icon('trash') ?> Delete selected
+            </button>
+        </div>
+    </form>
 
-<table>
-<tr>
-    <th><input type="checkbox" onclick="toggleAllLogs(this)"></th>
-    <th>Name</th>
-    <th>Size</th>
-    <th>Date</th>
-    <th>Action</th>
-</tr>
-
-<?php foreach ($logFiles as $l): ?>
-<tr>
-    <td>
-        <input type="checkbox" name="files[]" value="<?= htmlspecialchars($l) ?>">
-    </td>
-
-    <td><?= basename($l) ?></td>
-
-    <td>
-        <?= file_exists($l) ? round(filesize($l)/1024, 2) : 0 ?> KB
-    </td>
-
-    <td>
-        <?= file_exists($l) ? date("Y-m-d H:i:s", filemtime($l)) : '-' ?>
-    </td>
-
-    <td>
-        <a href="view.php?file=<?= urlencode($l) ?>">View</a>
-        <a href="download.php?file=<?= urlencode($l) ?>">Download</a>
-    </td>
-</tr>
-<?php endforeach; ?>
-
-</table>
-
-<br>
-
-<!-- ✅ SELECT ALL / UNSELECT ALL BUTTONS -->
-<button type="button" onclick="selectAllLogs(true)">Select All</button>
-<button type="button" onclick="selectAllLogs(false)">Unselect All</button>
-
-<button type="submit" onclick="return confirm('Delete selected logs?')">
-Delete Selected
-</button>
-
-</form>
-
+    <?php endif; ?>
 </div>
 
-<!-- ================= JS ================= -->
 <script>
 function selectAllLogs(state) {
-    document.querySelectorAll('#logForm input[type=checkbox]').forEach(cb => {
-        cb.checked = state;
-    });
+    document.querySelectorAll('#logForm input[type=checkbox]').forEach(cb => cb.checked = state);
 }
-
 function toggleAllLogs(source) {
-    document.querySelectorAll('#logForm input[type=checkbox]').forEach(cb => {
-        cb.checked = source.checked;
-    });
+    document.querySelectorAll('#logForm input[type=checkbox]').forEach(cb => cb.checked = source.checked);
 }
 </script>
 
+<?php mvnbc_shell_close(); ?>
 </body>
 </html>
