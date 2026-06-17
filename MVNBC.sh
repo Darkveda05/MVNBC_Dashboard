@@ -25,12 +25,27 @@
 umask 002
 
 # ==================================================
+# ROBUST PATH (web server / cron run with a minimal env)
+# When this script is launched by PHP (nginx/php-fpm) or cron, PATH is
+# often stripped down to /usr/bin:/bin, so tools like `expect`, `ssh`,
+# and `crontab` are "command not found" even though they work in an
+# interactive shell. Prepend the common locations so they resolve.
+# ==================================================
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+
+# ==================================================
 # CRON-PROOF BASE PATH (NO PWD DEPENDENCY)
 # ==================================================
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 
 BASE_DIR="$SCRIPT_DIR"
+
+# ==================================================
+# DEPENDENCY CHECK — locate `expect` (the #1 cause of "all failed"
+# when the backup is launched from the web UI under a minimal PATH)
+# ==================================================
+EXPECT_BIN="$(command -v expect 2>/dev/null)"
 
 CONFIG_FILE="$BASE_DIR/config/devices.conf"
 BACKUP_DIR="$BASE_DIR/backups"
@@ -137,6 +152,18 @@ run_backup() {
         exit 1
     fi
 
+    # Verify `expect` is available in THIS environment (web/cron PATH may differ
+    # from your interactive shell). Without it, every device backup fails.
+    if [[ -z "$EXPECT_BIN" ]]; then
+        echo "[FATAL] 'expect' command not found in PATH ($PATH)."
+        echo "[HINT]  The web server runs with a minimal PATH. Install expect"
+        echo "[HINT]  (e.g. 'apk add expect' or 'apt-get install -y expect') and"
+        echo "[HINT]  make sure it is on the PATH of the user running the web app."
+        echo "[DONE] Backup completed"
+        echo "[LOG] $RUN_LOG"
+        return 1
+    fi
+
     while IFS=',' read -r vendor ip username password enable_secret; do
 
         [[ -z "$vendor" || "$vendor" == \#* ]] && continue
@@ -180,7 +207,7 @@ run_backup() {
 				if [[ -f "$BACKUP_PATH" ]]; then
 				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
 				sed -i "/Permanently added .*known hosts/d" "$BACKUP_PATH"
-				sed -i '/password:/Id' "$BACKUP_PATH"
+				sed -i '/[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]:/d' "$BACKUP_PATH"
 				sed -i '/^ciscoasa> enable$/d' "$BACKUP_PATH"
 				sed -i '/^ciscoasa# ter pager 0$/d' "$BACKUP_PATH"
 				sed -i '/^ciscoasa# show running-config$/d' "$BACKUP_PATH"
@@ -196,7 +223,7 @@ run_backup() {
 				if [[ -f "$BACKUP_PATH" ]]; then
 				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
 				sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
-				sed -i '/password:/Id' "$BACKUP_PATH"
+				sed -i '/[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]:/d' "$BACKUP_PATH"
 				sed -i '/./,$!d' "$BACKUP_PATH"
 				fi
 				;;
@@ -208,7 +235,7 @@ run_backup() {
 				if [[ -f "$BACKUP_PATH" ]]; then
 				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
 				sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
-				sed -i '/password:/Id' "$BACKUP_PATH"
+				sed -i '/[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]:/d' "$BACKUP_PATH"
 				sed -i '/./,$!d' "$BACKUP_PATH"
 				fi
 				;;
@@ -220,8 +247,8 @@ run_backup() {
                 if [[ -f "$BACKUP_PATH" ]]; then
 				sed -i '/^spawn ssh /d' "$BACKUP_PATH"
 				sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
-				sed -i '/Password:/Id' "$BACKUP_PATH"
-				sed -i '/Last login:/Id' "$BACKUP_PATH"
+				sed -i '/[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]:/d' "$BACKUP_PATH"
+				sed -i '/[Ll][Aa][Ss][Tt] [Ll][Oo][Gg][Ii][Nn]:/d' "$BACKUP_PATH"
 				fi
                 ;;
 
@@ -243,7 +270,7 @@ run_backup() {
 					if [[ -f "$BACKUP_PATH" ]]; then
 					sed -i '/^spawn ssh /d' "$BACKUP_PATH"
 					sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
-					sed -i '/password:/Id' "$BACKUP_PATH"
+					sed -i '/[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]:/d' "$BACKUP_PATH"
 					sed -i '/./,$!d' "$BACKUP_PATH"
 					fi
 					;;
@@ -255,7 +282,7 @@ run_backup() {
 					if [[ -f "$BACKUP_PATH" ]]; then
 					sed -i '/^spawn ssh /d' "$BACKUP_PATH"
 					sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
-					sed -i '/password:/Id' "$BACKUP_PATH"
+					sed -i '/[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]:/d' "$BACKUP_PATH"
 					sed -i '/config system console/d' "$BACKUP_PATH"
 					sed -i '/set output standard/d' "$BACKUP_PATH"
 					sed -i '/^end$/d' "$BACKUP_PATH"
@@ -274,7 +301,7 @@ run_backup() {
 					if [[ -f "$BACKUP_PATH" ]]; then
 					sed -i '/^spawn ssh /d' "$BACKUP_PATH"
 					sed -i '/Permanently added .*known hosts/d' "$BACKUP_PATH"
-					sed -i '/password:/Id' "$BACKUP_PATH"
+					sed -i '/[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]:/d' "$BACKUP_PATH"
 					sed -i '/set cli screen-length 0/d' "$BACKUP_PATH"
 					sed -i '/Screen length set to 0/d' "$BACKUP_PATH"
 					sed -i '/^--- JUNOS/d' "$BACKUP_PATH"
@@ -304,6 +331,14 @@ run_backup() {
     echo ""
     echo "[DONE] Backup completed"
     echo "[LOG] $RUN_LOG"
+
+    # ==================================================
+    # SEND ALERTS (email / telegram) — never fail the run
+    # ==================================================
+    NOTIFY_SCRIPT="$BASE_DIR/web/app/notify_run.php"
+    if command -v php >/dev/null 2>&1 && [[ -f "$NOTIFY_SCRIPT" ]]; then
+        php "$NOTIFY_SCRIPT" "$RUN_LOG" || echo "[WARN] notifier returned non-zero"
+    fi
 }
 
 # ==================================================

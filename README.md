@@ -15,7 +15,7 @@ Current working products:
 
 <br></br>
 Change Log:<p></p>
-17/6/2026 - New dashboard, password encryption & device section 
+17/6/2026 - New dashboard, password encryption, Devices & Alert (Email & Telegram)
 <p></p>
 9/6/2026 - Added template for H3C_1920, Fortigate & Juniper
 

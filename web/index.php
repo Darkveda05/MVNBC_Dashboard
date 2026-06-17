@@ -159,12 +159,12 @@ require_once __DIR__ . '/app/includes/layout.php';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard · MVNBC</title>
-<link rel="stylesheet" href="assets/style.css?v=5">
+<link rel="stylesheet" href="assets/style.css?v=6">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
-<?php mvnbc_shell_open('dashboard', 'Operations Dashboard', 'Multivendor Network Backup Configuration'); ?>
+<?php mvnbc_shell_open('dashboard', 'Operations Dashboard', 'Multivendor network configuration backups'); ?>
 
 <?php if (isset($_GET['deleted']) || isset($_GET['failed'])): ?>
     <?php $del = (int)($_GET['deleted'] ?? 0); $fl = (int)($_GET['failed'] ?? 0); ?>
@@ -248,6 +248,10 @@ require_once __DIR__ . '/app/includes/layout.php';
     <div class="panel-head">
         <h2>Backup Files</h2>
         <span class="count-chip"><?= $totalBackupFiles ?> file<?= $totalBackupFiles === 1 ? '' : 's' ?></span>
+        <span class="spacer"></span>
+        <?php if (!empty($backupGroups)): ?>
+        <a class="btn btn-sm" href="download_zip.php?vendor=__all__"><?= mvnbc_icon('archive') ?> Download all (.zip)</a>
+        <?php endif; ?>
     </div>
 
     <?php if (empty($backupGroups)): ?>
@@ -319,6 +323,8 @@ require_once __DIR__ . '/app/includes/layout.php';
                 </div>
 
                 <div class="btn-row" style="padding:14px 16px 16px;">
+                    <a class="btn btn-sm" href="download_zip.php?vendor=<?= urlencode($vendor) ?>"><?= mvnbc_icon('archive') ?> Download <?= htmlspecialchars(strtoupper($vendor)) ?> (.zip)</a>
+                    <span class="spacer"></span>
                     <button type="button" class="btn btn-sm" onclick="selectVendorAll('<?= $vid ?>')">Select all</button>
                     <button type="button" class="btn btn-sm" onclick="unselectVendorAll('<?= $vid ?>')">Clear</button>
                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete the selected backup files?')">

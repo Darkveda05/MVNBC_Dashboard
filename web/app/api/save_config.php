@@ -77,13 +77,6 @@ if (empty($clean)) {
 }
 
 /* ==================================================
-   BACKUP OLD FILE
-================================================== */
-if (file_exists($configFile)) {
-    copy($configFile, $configFile . ".bak_" . date("Ymd_His"));
-}
-
-/* ==================================================
    WRITE FILE
 ================================================== */
 $result = file_put_contents($configFile, implode("\n", $clean));

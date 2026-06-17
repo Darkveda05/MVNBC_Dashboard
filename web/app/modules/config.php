@@ -44,10 +44,6 @@ function load_devices($file) {
 }
 
 function write_devices($file, $rows, $logFile) {
-    // timestamped backup before any write
-    if (file_exists($file)) {
-        @copy($file, $file . ".bak_" . date("Ymd_His"));
-    }
     $lines = [];
     foreach ($rows as $r) {
         $line = $r['vendor'] . "," . $r['ip'] . "," . $r['user'] . "," . $r['pass'];
@@ -136,11 +132,11 @@ $rows = load_devices($configFile);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Devices · MVNBC</title>
-<link rel="stylesheet" href="../../assets/style.css?v=5">
+<link rel="stylesheet" href="../../assets/style.css?v=6">
 </head>
 <body>
 
-<?php mvnbc_shell_open('devices', 'Devices', 'Inventory backed up by the scheduled job', '../../'); ?>
+<?php mvnbc_shell_open('devices', 'Devices', 'Manage the device backup inventory', '../../'); ?>
 
 <?php if ($msg): ?>
     <div class="flash <?= $ok ? 'success' : 'error' ?>">
@@ -225,7 +221,7 @@ $rows = load_devices($configFile);
     </form>
 
     <div class="note">
-        <p style="margin:0;"><?= mvnbc_icon('shield') ?> New devices are written to <code>config/devices.conf</code> and picked up on the next scheduled <code>MVNBC.sh</code> run. A timestamped backup of the file is saved automatically before each change.</p>
+        <p style="margin:0;"><?= mvnbc_icon('shield') ?> New devices are written to <code>config/devices.conf</code> and picked up on the next <code>MVNBC.sh</code> backup run.</p>
     </div>
 </div>
 

@@ -55,7 +55,7 @@ require_once __DIR__ . '/../includes/layout.php';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Security · MVNBC</title>
-<link rel="stylesheet" href="../../assets/style.css?v=5">
+<link rel="stylesheet" href="../../assets/style.css?v=6">
 </head>
 <body>
 

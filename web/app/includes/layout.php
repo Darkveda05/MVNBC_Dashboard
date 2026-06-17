@@ -35,6 +35,8 @@ if (!function_exists('mvnbc_icon')) {
             'refresh'   => '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>',
             'save'      => '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
             'chevron'   => '<path d="m9 18 6-6-6-6"/>',
+            'bell'      => '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+            'archive'   => '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/>',
         ];
         $body = $icons[$name] ?? '';
         return $p . $body . '</svg>';
@@ -47,8 +49,8 @@ if (!function_exists('mvnbc_icon')) {
             ['key' => 'dashboard', 'href' => $base . 'index.php',                'icon' => 'grid',     'label' => 'Dashboard'],
             ['key' => 'compare',   'href' => $base . 'app/modules/compare.php',  'icon' => 'compare',  'label' => 'Compare'],
             ['key' => 'logs',      'href' => $base . 'logs.php',                 'icon' => 'logs',     'label' => 'Logs'],
-            ['key' => 'bash',      'href' => $base . 'app/modules/bash.php',     'icon' => 'terminal', 'label' => 'Backup Script'],
             ['key' => 'devices',   'href' => $base . 'app/modules/config.php',   'icon' => 'devices',  'label' => 'Devices'],
+            ['key' => 'alerts',    'href' => $base . 'app/modules/alerts.php',   'icon' => 'bell',     'label' => 'Alerts'],
             ['key' => 'settings',  'href' => $base . 'app/modules/settings.php', 'icon' => 'key',      'label' => 'Security'],
         ];
         ?>
@@ -59,7 +61,6 @@ if (!function_exists('mvnbc_icon')) {
                     <img src="<?= $base ?>img/mvnbc.png" alt="MVNBC">
                     <div>
                         <div class="brand-name">MVNBC</div>
-                        <div class="brand-sub">Backup Console</div>
                     </div>
                 </div>
                 <div class="nav-label">Operations</div>
