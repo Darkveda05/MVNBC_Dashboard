@@ -24,7 +24,8 @@ Requirements:
 1) Linux (Ubuntu/debian/casaos)
 2) git
 3) zsh
-4) web server (nginx/apache/xampp)<br></br>
+4) php
+5) web server (nginx/apache/xampp)<br></br>
 
 Installation step:
 
@@ -41,7 +42,9 @@ Installation step:
     git clone https://github.com/Darkveda05/MVNBC_Dashboard.git
     cd MVNBC_Dashboard
 	chmod +x web/app/notify_run.py
-	chmod +x config/settings.json
+	chmod -R 777 backups
+	chmod -R 777 config
+	chmod -R 777 logs
 	dos2unix MVNBC.sh
     chmod +x MVNBC.sh
     ./MVNBC.sh
