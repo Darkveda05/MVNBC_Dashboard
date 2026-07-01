@@ -61,6 +61,12 @@ RUN_ID=$(date +%Y%m%d_%H%M%S)
 RUN_LOG="$LOG_DIR/run_${RUN_ID}.log"
 
 exec > >(tee -a "$RUN_LOG") 2>&1
+# The `tee` above runs asynchronously (process substitution). Without waiting for
+# it, the shell can exit before tee flushes, TRUNCATING the tail of the log
+# (this is why some run_*.log files cut off mid-line). Capture tee's PID and,
+# on exit, close our stdout/stderr so tee sees EOF, then wait for it to finish.
+TEE_PID=$!
+trap 'exec 1>&- 2>&-; [ -n "$TEE_PID" ] && wait "$TEE_PID" 2>/dev/null' EXIT
 
 echo "======================================"
 echo " Multi-Vendor Auto Backup Engine"
@@ -333,11 +339,44 @@ run_backup() {
     echo "[LOG] $RUN_LOG"
 
     # ==================================================
-    # SEND ALERTS (email / telegram) — never fail the run
+    # SEND ALERTS (email / telegram) — never fail the run.
+    # The old code only ran the notifier if a `php` CLI was on PATH, and
+    # skipped SILENTLY otherwise. In many Docker/CasaOS LEMP setups the cron
+    # environment has php-fpm but NO `php` CLI, so alerts were never sent even
+    # though the web "Send test" buttons (which run under php-fpm) worked.
+    # Now: try php, then a self-contained python3 fallback, then warn loudly.
+    # Notifier output is tee'd to its OWN log so it can't be lost to the
+    # run-log flush race above.
     # ==================================================
-    NOTIFY_SCRIPT="$BASE_DIR/web/app/notify_run.php"
-    if command -v php >/dev/null 2>&1 && [[ -f "$NOTIFY_SCRIPT" ]]; then
-        php "$NOTIFY_SCRIPT" "$RUN_LOG" || echo "[WARN] notifier returned non-zero"
+    NOTIFY_PHP="$BASE_DIR/web/app/notify_run.php"
+    NOTIFY_PY="$BASE_DIR/web/app/notify_run.py"
+    NOTIFY_OUT="$LOG_DIR/notify_${RUN_ID}.log"
+
+    # Resolve a usable php CLI (PATH may be minimal; try common names/paths).
+    PHP_BIN="$(command -v php 2>/dev/null || command -v php8.3 2>/dev/null || command -v php8.2 2>/dev/null || command -v php8.1 2>/dev/null || command -v php8.0 2>/dev/null || command -v php7.4 2>/dev/null || true)"
+    for _c in /usr/local/bin/php /usr/bin/php; do
+        [[ -z "$PHP_BIN" && -x "$_c" ]] && PHP_BIN="$_c"
+    done
+    PY_BIN="$(command -v python3 2>/dev/null || command -v python 2>/dev/null || true)"
+
+    echo "[INFO] Notifier available: php='${PHP_BIN:-none}' python='${PY_BIN:-none}'"
+
+    if [[ -n "$PHP_BIN" && -f "$NOTIFY_PHP" ]]; then
+        "$PHP_BIN" "$NOTIFY_PHP" "$RUN_LOG" > "$NOTIFY_OUT" 2>&1
+        _rc=$?
+        cat "$NOTIFY_OUT"
+        [[ $_rc -ne 0 ]] && echo "[WARN] php notifier exited $_rc (see $NOTIFY_OUT)"
+    elif [[ -n "$PY_BIN" && -f "$NOTIFY_PY" ]]; then
+        echo "[INFO] php CLI unavailable here — using python3 notifier fallback"
+        "$PY_BIN" "$NOTIFY_PY" "$RUN_LOG" > "$NOTIFY_OUT" 2>&1
+        _rc=$?
+        cat "$NOTIFY_OUT"
+        [[ $_rc -ne 0 ]] && echo "[WARN] python notifier exited $_rc (see $NOTIFY_OUT)"
+    else
+        echo "[WARN] Neither php nor python3 is available in this environment."
+        echo "[WARN] Backup alerts were NOT sent."
+        echo "[HINT] Install php-cli OR python3 in the container that runs this"
+        echo "[HINT] script/cron, or schedule cron inside your php-fpm container."
     fi
 }
 

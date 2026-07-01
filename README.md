@@ -28,8 +28,10 @@ Requirements:
 
 Installation step:
 
-    sudo apt install git
+    sudo apt-get update
+	sudo apt install git
     sudo apt install zsh
+	sudo apt install -y php-cli php-curl
     sudo apt install sshpass -y
     sudo apt install dos2unix -y
 
@@ -38,7 +40,9 @@ Installation step:
 
     git clone https://github.com/Darkveda05/MVNBC_Dashboard.git
     cd MVNBC_Dashboard
-    dos2unix MVNBC.sh
+	chmod +x web/app/notify_run.py
+	chmod +x config/settings.json
+	dos2unix MVNBC.sh
     chmod +x MVNBC.sh
     ./MVNBC.sh
 
